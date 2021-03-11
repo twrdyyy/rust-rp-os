@@ -52,7 +52,7 @@ $(KERNEL_BIN): $(KERNEL_ELF)
 	@$(OBJCOPY_CMD) $(KERNEL_ELF) $(KERNEL_BIN)
 
 doc:
-	$(DOC_CMD) --document-private-items --open
+	$(DOC_CMD) --document-private-items
 
 ifeq ($(QEMU_MACHINE_TYPE),)
 qemu:
