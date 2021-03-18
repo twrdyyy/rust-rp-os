@@ -17,8 +17,6 @@ jobs:
     - stage: build
       if: type = pull_request
       script: make check
-      script: make qemu
     - stage: deploy
       if: type = push
       script: make check
-      script: mke qemu
