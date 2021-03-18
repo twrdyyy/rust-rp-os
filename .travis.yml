@@ -1,0 +1,23 @@
+language: rust
+rust: 
+ - stable
+
+install:
+  - cargo install cargo-binutils rustfilt
+
+branches:
+  only: 
+    - master
+
+jobs:
+  include:
+    - stage: check
+      if: type = pull_request
+      script: make check
+    - stage: build
+      if: type = pull_request
+      script: make qemu
+    - stage: deploy
+      if: type = push
+      script: make check
+      script: mke qemu
