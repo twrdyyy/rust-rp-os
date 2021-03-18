@@ -7,7 +7,7 @@ install:
 
 branches:
   only: 
-    - master
+    - main
 
 jobs:
   include:
