@@ -5,17 +5,18 @@ rust:
 install:
   - cargo install cargo-binutils rustfilt
 
+services:
+  - docker
+
 branches:
   only: 
     - main
 
 jobs:
   include:
-    - stage: check
-      if: type = pull_request
-      script: make check
     - stage: build
       if: type = pull_request
+      script: make check
       script: make qemu
     - stage: deploy
       if: type = push
