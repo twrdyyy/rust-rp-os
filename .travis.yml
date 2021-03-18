@@ -1,0 +1,22 @@
+language: rust
+rust: 
+ - stable
+
+install:
+  - cargo install cargo-binutils rustfilt
+
+services:
+  - docker
+
+branches:
+  only: 
+    - main
+
+jobs:
+  include:
+    - stage: build
+      if: type = pull_request
+      script: make check
+    - stage: deploy
+      if: type = push
+      script: make check
