@@ -8,4 +8,7 @@ edition = "2018"
 default = []
 bsp_rpi3 = []
 
+[profile.release]
+lto = true
+
 [dependencies]

@@ -10,3 +10,10 @@
 mod bsp;
 mod cpu;
 mod panic_wait;
+mod runtime_init;
+mod memory;
+
+
+unsafe fn kernel_init() -> ! {
+	panic!()
+}
