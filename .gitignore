@@ -25,6 +25,7 @@ __pycache__/
 /inst/
 /llvm/
 /mingw-build/
+*.img
 /src/tools/x/target
 # Created by defult with `src/ci/docker/run.sh`:
 /obj/
