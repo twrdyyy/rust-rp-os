@@ -1,4 +1,6 @@
+__rpi_load_addr = 0x80000;
 
+ENTRY(__rpi_load_addr)
 
 PHDRS
 {
@@ -8,7 +10,12 @@ PHDRS
 
 SECTIONS
 {
-    . =  0x80000;
+    . =  __rpi_load_addr;
+                                        /*   ^             */
+                                        /*   | stack       */
+                                        /*   | growth      */
+                                        /*   | direction   */
+   __boot_core_stack_end_exclusive = .; /*   |             */
 
     /***********************************************************************************************
     * Code + RO Data + Global Offset Table
@@ -16,7 +23,9 @@ SECTIONS
     .text :
     {
         KEEP(*(.text._start))
-        *(.text*)
+        *(.text._start_arguments) /* Constants (or statics in Rust speak) read by _start(). */
+        *(.text._start_rust)      /* The Rust entry point */
+        *(.text*)                 /* Everything else */
     } :segment_rx
 
     .rodata : ALIGN(8) { *(.rodata*) } :segment_rx

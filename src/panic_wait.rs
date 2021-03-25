@@ -1,8 +1,13 @@
 //! A Panic handler that infinitely waits
+use crate::{cpu, println};
 use core::panic::PanicInfo;
-use crate::cpu;
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    cpu::wait_forever()
-}
+fn panic(info: &PanicInfo) -> ! {
+    if let Some(args) = info.message() {
+        println!("\nKernel panic: {}", args);
+    } else {
+        println!("\nKernel panic!");
+    }
+
+    cpu::wait_forever()}
