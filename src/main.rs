@@ -19,7 +19,7 @@ mod console;
 
 unsafe fn kernel_init() -> ! {
 
-    println!("[0] Hello from Rust!");
+    println!("Hello from Rust!");
 
 	panic!("Stopping here.")
 }
