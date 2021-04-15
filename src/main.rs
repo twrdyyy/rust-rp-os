@@ -5,6 +5,7 @@
 #![feature(format_args_nl)]
 #![feature(global_asm)]
 #![feature(panic_info_message)]
+#![feature(trait_alias)]
 #![no_main]
 #![no_std]
 
@@ -15,11 +16,13 @@ mod panic_wait;
 mod runtime_init;
 mod memory;
 mod console;
+mod synchronization;
 
 
 unsafe fn kernel_init() -> ! {
-
+    use console::interface::Statistics;
     println!("Hello from Rust!");
-
-	panic!("Stopping here.")
+    println!("[1] Chars written: {}", bsp::console::console().chars_written());
+    println!("[2] Stopping here.");
+    cpu::wait_forever()
 }
