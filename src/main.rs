@@ -18,10 +18,27 @@ mod memory;
 mod console;
 mod synchronization;
 
+const OS_LOGO: &str = r#"
+ _______                         __            _______   _______          ______    ______
+/       \                       /  |          /       \ /       \        /      \  /      \
+$$$$$$$  | __    __   _______  _$$ |_         $$$$$$$  |$$$$$$$  |      /$$$$$$  |/$$$$$$  |
+$$ |__$$ |/  |  /  | /       |/ $$   |        $$ |__$$ |$$ |__$$ |      $$ |  $$ |$$ \__$$/
+$$    $$< $$ |  $$ |/$$$$$$$/ $$$$$$/         $$    $$< $$    $$/       $$ |  $$ |$$      \
+$$$$$$$  |$$ |  $$ |$$      \   $$ | __       $$$$$$$  |$$$$$$$/        $$ |  $$ | $$$$$$  |
+$$ |  $$ |$$ \__$$ | $$$$$$  |  $$ |/  |      $$ |  $$ |$$ |            $$ \__$$ |/  \__$$ |
+$$ |  $$ |$$    $$/ /     $$/   $$  $$/       $$ |  $$ |$$ |            $$    $$/ $$    $$/
+$$/   $$/  $$$$$$/  $$$$$$$/     $$$$/        $$/   $$/ $$/              $$$$$$/   $$$$$$/
+"#;
+
 
 unsafe fn kernel_init() -> ! {
+    kernel_main()
+}
+
+
+fn kernel_main() -> ! {
     use console::interface::Statistics;
-    println!("Hello from Rust!");
+    println!("{}", OS_LOGO);
     println!("[1] Chars written: {}", bsp::console::console().chars_written());
     println!("[2] Stopping here.");
     cpu::wait_forever()
