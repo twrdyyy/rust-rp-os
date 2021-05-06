@@ -16,6 +16,7 @@ name = "kernel"
 version = "0.1.0"
 dependencies = [
  "cortex-a",
+ "register",
 ]
 
 [[package]]
