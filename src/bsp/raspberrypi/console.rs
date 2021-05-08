@@ -19,7 +19,6 @@ pub struct QEMUOutput {
 
 static QEMU_OUTPUT: QEMUOutput = QEMUOutput::new();
 
-
 impl QEMUOutputInner {
     const fn new() -> QEMUOutputInner {
         QEMUOutputInner { chars_written: 0 }
@@ -33,7 +32,6 @@ impl QEMUOutputInner {
         self.chars_written += 1;
     }
 }
-
 impl fmt::Write for QEMUOutputInner {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for c in s.chars() {
@@ -81,3 +79,4 @@ impl console::interface::Statistics for QEMUOutput {
     }
 }
 */
+
