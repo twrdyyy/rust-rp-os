@@ -1,7 +1,12 @@
 
-use crate::{synchronization, console, synchronization::NullLock};
+//use crate::{synchronization, console, synchronization::NullLock};
+use super::memory;
+use crate::{bsp::device_driver, console};
+
+//use crate::{bsp::device_driver};
 use core::fmt;
-use synchronization::interface::Mutex;
+//use synchronization::interface::Mutex;
+/*
 /// The mutex protected part.
 struct QEMUOutputInner {
     chars_written: usize,
@@ -13,7 +18,6 @@ pub struct QEMUOutput {
 
 
 static QEMU_OUTPUT: QEMUOutput = QEMUOutput::new();
-
 
 impl QEMUOutputInner {
     const fn new() -> QEMUOutputInner {
@@ -28,7 +32,6 @@ impl QEMUOutputInner {
         self.chars_written += 1;
     }
 }
-
 impl fmt::Write for QEMUOutputInner {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for c in s.chars() {
@@ -50,11 +53,19 @@ impl QEMUOutput {
         }
     }
 }
-
-pub fn console() -> &'static impl console::interface::All {
-    &QEMU_OUTPUT
+*/
+pub unsafe fn panic_console_out() -> impl fmt::Write {
+    let mut panic_gpio = device_driver::PanicGPIO::new(memory::map::mmio::GPIO_START);
+    let mut panic_uart = device_driver::PanicUart::new(memory::map::mmio::PL011_UART_START);
+    panic_gpio.map_pl011_uart();
+    panic_uart.init();
+    panic_uart
 }
 
+pub fn console() -> &'static impl console::interface::All {
+    &super::PL011_UART
+}
+/*
 impl console::interface::Write for QEMUOutput {
     fn write_fmt(&self, args: core::fmt::Arguments) -> fmt::Result {
        
@@ -67,3 +78,5 @@ impl console::interface::Statistics for QEMUOutput {
         self.inner.lock(|inner| inner.chars_written)
     }
 }
+*/
+
