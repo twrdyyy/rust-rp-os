@@ -11,16 +11,14 @@ PHDRS
 
 SECTIONS
 {
-    . =  __rpi_load_addr;
+    . =  0x2000000;
                                         /*   ^             */
                                         /*   | stack       */
                                         /*   | growth      */
                                         /*   | direction   */
    __boot_core_stack_end_exclusive = .; /*   |             */
 
-    /***********************************************************************************************
-    * Code + RO Data + Global Offset Table
-    ***********************************************************************************************/
+    __binary_nonzero_start = .;
     .text :
     {
         KEEP(*(.text._start))
@@ -37,8 +35,11 @@ SECTIONS
     ***********************************************************************************************/
     .data : { *(.data*) } :segment_rw
 
+    . = ALIGN(8);
+    __binary_nonzero_end_exclusive = .;
+
     /* Section is zeroed in u64 chunks, align start and end to 8 bytes */
-    .bss : ALIGN(8)
+    .bss :
     {
         __bss_start = .;
         *(.bss*);

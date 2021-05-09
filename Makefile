@@ -18,6 +18,7 @@ ifeq ($(BSP),rpi3)
     READELF_BINARY    = aarch64-none-elf-readelf
     LINKER_FILE       = src/bsp/raspberrypi/link.ld
     RUSTC_MISC_ARGS   = -C target-cpu=cortex-a53
+    CHAINBOOT_DEMO_PAYLOAD = demo_payload_rpi3.img
 else ifeq ($(BSP),rpi4)
     TARGET            = aarch64-unknown-none-softfloat
     KERNEL_BIN        = kernel8.img
@@ -29,6 +30,7 @@ else ifeq ($(BSP),rpi4)
     READELF_BINARY    = aarch64-none-elf-readelf
     LINKER_FILE       = src/bsp/raspberrypi/link.ld
     RUSTC_MISC_ARGS   = -C target-cpu=cortex-a72
+    CHAINBOOT_DEMO_PAYLOAD = demo_payload_rpi4.img
 endif
 
 # Export for build.rs
@@ -47,7 +49,7 @@ COMPILER_ARGS = --target=$(TARGET) \
 RUSTC_CMD   = cargo rustc $(COMPILER_ARGS)
 DOC_CMD     = cargo doc $(COMPILER_ARGS)
 CLIPPY_CMD  = cargo clippy $(COMPILER_ARGS)
-CHECK_CMD   = cargo check $(COMPILER_ARGS)
+CHECK_CMD   = cargo check --color always $(COMPILER_ARGS)
 OBJCOPY_CMD = rust-objcopy \
     --strip-all            \
     -O binary
@@ -61,6 +63,7 @@ DOCKER_ARG_DIR_UTILS = -v $(shell pwd)/../utils:/work/utils
 DOCKER_ARG_DEV       = --privileged -v /dev:/dev
 
 DOCKER_QEMU  = $(DOCKER_CMD_INTERACT) $(DOCKER_IMAGE)
+DOCKER_TEST  = $(DOCKER_CMD) -t $(DOCKER_ARG_DIR_UTILS) $(DOCKER_IMAGE)
 DOCKER_TOOLS = $(DOCKER_CMD) $(DOCKER_IMAGE)
 
 # Dockerize commands that require USB device passthrough only on Linux
@@ -72,8 +75,9 @@ endif
 
 EXEC_QEMU     = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
 EXEC_MINIPUSH = ruby ../utils/minipush.rb
+EXEC_QEMU_MINIPUSH = ruby tests/qemu_minipush.rb
 
-.PHONY: all $(KERNEL_ELF) $(KERNEL_BIN) doc qemu chainboot clippy clean readelf objdump nm check
+.PHONY: all $(KERNEL_ELF) $(KERNEL_BIN) doc qemu qemuasm chainboot clippy clean readelf objdump nm check
 
 all: $(KERNEL_BIN)
 
@@ -89,7 +93,7 @@ doc:
 	@$(DOC_CMD) --document-private-items --open
 
 ifeq ($(QEMU_MACHINE_TYPE),)
-qemu:
+qemu test:
 	$(call colorecho, "\n$(QEMU_MISSING_STRING)")
 else
 qemu: $(KERNEL_BIN)
@@ -97,8 +101,17 @@ qemu: $(KERNEL_BIN)
 	@$(DOCKER_QEMU) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -kernel $(KERNEL_BIN)
 endif
 
+qemuasm: $(KERNEL_BIN)
+	$(call colorecho, "\nLaunching QEMU with ASM output")
+	@$(DOCKER_QEMU) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -kernel $(KERNEL_BIN) -d in_asm
+
+test: $(KERNEL_BIN)
+	$(call colorecho, "\nTesting chainloading - $(BSP)")
+	@$(DOCKER_TEST) $(EXEC_QEMU_MINIPUSH) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS) \
+			-kernel $(KERNEL_BIN) $(CHAINBOOT_DEMO_PAYLOAD)
+
 chainboot: $(KERNEL_BIN)
-	@$(DOCKER_CHAINBOOT) $(EXEC_MINIPUSH) $(DEV_SERIAL) $(KERNEL_BIN)
+	@$(DOCKER_CHAINBOOT) $(EXEC_MINIPUSH) $(DEV_SERIAL) $(CHAINBOOT_DEMO_PAYLOAD)
 
 clippy:
 	@RUSTFLAGS="$(RUSTFLAGS_PEDANTIC)" $(CLIPPY_CMD)
@@ -124,4 +137,4 @@ nm: $(KERNEL_ELF)
 
 # For rust-analyzer
 check:
-	@RUSTFLAGS="$(RUSTFLAGS)" $(CHECK_CMD) --message-format=json
+	@RUSTFLAGS="$(RUSTFLAGS)" $(CHECK_CMD) --message-format=human

@@ -5,21 +5,35 @@
 #![feature(format_args_nl)]
 #![feature(global_asm)]
 #![feature(panic_info_message)]
+#![feature(asm)]
 #![feature(trait_alias)]
 #![no_main]
 #![no_std]
 #![allow(clippy::upper_case_acronyms)]
 #![feature(const_fn_fn_ptr_basics)]
 mod bsp;
+mod console;
 mod cpu;
 mod print;
 mod panic_wait;
 mod runtime_init;
 mod memory;
-mod console;
 mod synchronization;
 mod driver;
 mod time;
+
+const OS_LOGO: &str = r#"
+ _______                         __            _______   _______          ______    ______
+/       \                       /  |          /       \ /       \        /      \  /      \
+$$$$$$$  | __    __   _______  _$$ |_         $$$$$$$  |$$$$$$$  |      /$$$$$$  |/$$$$$$  |
+$$ |__$$ |/  |  /  | /       |/ $$   |        $$ |__$$ |$$ |__$$ |      $$ |  $$ |$$ \__$$/
+$$    $$< $$ |  $$ |/$$$$$$$/ $$$$$$/         $$    $$< $$    $$/       $$ |  $$ |$$      \
+$$$$$$$  |$$ |  $$ |$$      \   $$ | __       $$$$$$$  |$$$$$$$/        $$ |  $$ | $$$$$$  |
+$$ |  $$ |$$ \__$$ | $$$$$$  |  $$ |/  |      $$ |  $$ |$$ |            $$ \__$$ |/  \__$$ |
+$$ |  $$ |$$    $$/ /     $$/   $$  $$/       $$ |  $$ |$$ |            $$    $$/ $$    $$/
+$$/   $$/  $$$$$$/  $$$$$$$/     $$$$/        $$/   $$/ $$/              $$$$$$/   $$$$$$/
+"#;
+
 
 unsafe fn kernel_init() -> ! {
     use driver::interface::DriverManager;
@@ -41,6 +55,39 @@ fn kernel_main() -> ! {
     use core::time::Duration;
     use driver::interface::DriverManager;
     use time::interface::TimeManager;
+    use bsp::console::console;
+    use console::interface::All;
+
+    println!("{}", OS_LOGO);
+    println!("{:^37}", bsp::board_name());
+    println!();
+    println!("[ML] Requesting binary");
+    console().flush();
+
+    console().clear_rx();
+
+    for _ in 0..3 {
+        console().write_char(3 as char);
+    }
+
+    let mut size: u32= u32::from(console().read_char() as u8);
+    size |= u32::from(console().read_char() as u8) << 8;
+    size |= u32::from(console().read_char() as u8) << 16;
+    size |= u32::from(console().read_char() as u8) << 24;
+
+    console().write_char('O');
+    console().write_char('K');
+
+    let kernel_addr: *mut u8 = bsp::memory::board_default_load_addr() as *mut u8;
+    unsafe {
+        for i in 0..size {
+            core::ptr::write_volatile(kernel_addr.offset(i as isize),
+                                      console().read_char() as u8)
+        }
+    }
+
+    println!("[ML] Loaded! Executig the payload now\n");
+    console().flush();
 
     println!(
         "{} version {}",
