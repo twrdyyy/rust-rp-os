@@ -1,3 +1,4 @@
+/* The address at which the the kernel binary will be loaded by the Raspberry's firmware */
 __rpi_load_addr = 0x80000;
 
 ENTRY(__rpi_load_addr)

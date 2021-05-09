@@ -5,14 +5,9 @@
 
 .equ _core_id_mask, 0b11
 
-//--------------------------------------------------------------------------------------------------
-// Public Code
-//--------------------------------------------------------------------------------------------------
 .section .text._start
 
-//------------------------------------------------------------------------------
-// fn _start()
-//------------------------------------------------------------------------------
+
 _start:
 	// Only proceed on the boot core. Park it otherwise.
 	mrs	x1, MPIDR_EL1
@@ -21,16 +16,12 @@ _start:
 	cmp	x1, x2
 	b.ne	1f
 
-	// If execution reaches here, it is the boot core. Now, prepare the jump to Rust code.
-
-	// Set the stack pointer.
 	ADR_REL	x0, __boot_core_stack_end_exclusive
 	mov	sp, x0
 
 	// Jump to Rust code.
 	b	_start_rust
 
-	// Infinitely wait for events (aka "park the core").
 1:	wfe
 	b	1b
 

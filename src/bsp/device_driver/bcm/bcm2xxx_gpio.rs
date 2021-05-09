@@ -4,8 +4,10 @@ use crate::{
     bsp::device_driver::common::MMIODerefWrapper, driver, synchronization,
     synchronization::NullLock,
 };
-use register::{mmio::*, register_bitfields, register_structs};
 
+use crate::{time, time::interface::TimeManager};
+use register::{mmio::*, register_bitfields, register_structs};
+use core::time::Duration;
 
 //https://github.com/raspberrypi/documentation/files/1888662/BCM2837-ARM-Peripherals.-.Revised.-.V2-1.pdf
 //https://datasheets.raspberrypi.org/bcm2711/bcm2711-peripherals.pdf
@@ -110,17 +112,18 @@ impl GPIOInner {
     /// Disable pull-up/down on pins 14 and 15.
     #[cfg(feature = "bsp_rpi3")]
     fn disable_pud_14_15_bcm2837(&mut self) {
-        use crate::cpu;
+        
 
-        const DELAY: usize = 2000;
+        const DELAY: Duration = Duration::from_micros(2);
 
         self.registers.GPPUD.write(GPPUD::PUD::Off);
-        cpu::spin_for_cycles(DELAY);
+        time::time_manager().spin_for(DELAY);
 
         self.registers
             .GPPUDCLK0
             .write(GPPUDCLK0::PUDCLK15::AssertClock + GPPUDCLK0::PUDCLK14::AssertClock);
-        cpu::spin_for_cycles(DELAY);
+        
+        time::time_manager().spin_for(DELAY);
 
         self.registers.GPPUD.write(GPPUD::PUD::Off);
         self.registers.GPPUDCLK0.set(0);
