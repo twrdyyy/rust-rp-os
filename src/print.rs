@@ -1,4 +1,5 @@
 use crate::{bsp, console};
+
 use core::fmt;
 
 #[doc(hidden)]
@@ -21,4 +22,21 @@ macro_rules! println {
     ($($arg:tt)*) => ({
         $crate::print::_print(format_args_nl!($($arg)*));
     })
+}
+
+/// Debug
+#[macro_export]
+macro_rules! debug {
+    ($string:expr) => ({
+        #[allow(unused_imports)]
+        use crate::time::time_manager;
+        
+
+        $crate::print::_print(format_args_nl!(
+            concat!($string, "TIME: {:>3}s {:03} ms"),
+            time_manager().uptime().as_secs(),
+            time_manager().uptime().subsec_micros()/1000,
+        ));
+    });
+    
 }
