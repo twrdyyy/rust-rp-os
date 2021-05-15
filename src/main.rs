@@ -55,40 +55,14 @@ fn kernel_main() -> ! {
     use core::time::Duration;
     use driver::interface::DriverManager;
     use time::interface::TimeManager;
-    use bsp::console::console;
-    use console::interface::All;
-
+    //use bsp::console::console;
+    //use console::interface::All;
     println!("{}", OS_LOGO);
     println!("{:^37}", bsp::board_name());
     println!();
-    println!("[ML] Requesting binary");
-    console().flush();
+    println!("[ML]hello");
 
-    console().clear_rx();
-
-    for _ in 0..3 {
-        console().write_char(3 as char);
-    }
-
-    let mut size: u32= u32::from(console().read_char() as u8);
-    size |= u32::from(console().read_char() as u8) << 8;
-    size |= u32::from(console().read_char() as u8) << 16;
-    size |= u32::from(console().read_char() as u8) << 24;
-
-    console().write_char('O');
-    console().write_char('K');
-
-    let kernel_addr: *mut u8 = bsp::memory::board_default_load_addr() as *mut u8;
-    unsafe {
-        for i in 0..size {
-            core::ptr::write_volatile(kernel_addr.offset(i as isize),
-                                      console().read_char() as u8)
-        }
-    }
-
-    println!("[ML] Loaded! Executig the payload now\n");
-    console().flush();
-
+    
     println!(
         "{} version {}",
         env!("CARGO_PKG_NAME"),
@@ -117,4 +91,5 @@ fn kernel_main() -> ! {
         debug!("Spinning for 1 second");
         time::time_manager().spin_for(Duration::from_secs(1));
     }
+    
 }
