@@ -21,6 +21,7 @@ mod memory;
 mod synchronization;
 mod driver;
 mod time;
+mod scheduler;
 
 const OS_LOGO: &str = r#"
  _______                         __            _______   _______          ______    ______
@@ -50,8 +51,19 @@ unsafe fn kernel_init() -> ! {
     kernel_main()
 }
 
+fn first_task() {
+    println!("XD");
+}
+
+fn second_task() {
+    use core::time::Duration;
+    use time::interface::TimeManager;
+    println!("XD2");
+    time::time_manager().spin_for(Duration::from_secs(1));
+    println!("XD2KONIEC");
+}
 /// The main function running after the early init.
-fn kernel_main() -> ! {
+unsafe fn kernel_main() -> ! {
     use core::time::Duration;
     use driver::interface::DriverManager;
     use time::interface::TimeManager;
@@ -87,9 +99,19 @@ fn kernel_main() -> ! {
     // Test a failing timer case.
     time::time_manager().spin_for(Duration::from_nanos(1));
 
+    scheduler::SCHEDULER.add_task(&(first_task as fn()->()));
+    scheduler::SCHEDULER.add_task(&(second_task as fn()->()));
+
+    let mut task: fn() -> () = scheduler::SCHEDULER.take_task().unwrap();
+    task();
+    scheduler::SCHEDULER.add_task(&(second_task as fn()->()));
+    task = scheduler::SCHEDULER.take_task().unwrap();
+    task();
+    task = scheduler::SCHEDULER.take_task().unwrap();
+    task();
     loop {
-        debug!("Spinning for 1 second");
-        time::time_manager().spin_for(Duration::from_secs(1));
+
     }
+    
     
 }
