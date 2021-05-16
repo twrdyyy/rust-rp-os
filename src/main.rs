@@ -96,6 +96,10 @@ unsafe fn kernel_main() -> ! {
         println!("      {}. {}", i + 1, driver.compatible());
     }
 
+
+    //core::ptr::write_volatile(0xE0 as *mut fn()->(), first_task as fn()->());
+
+
     // Test a failing timer case.
     time::time_manager().spin_for(Duration::from_nanos(1));
 
@@ -107,8 +111,8 @@ unsafe fn kernel_main() -> ! {
     scheduler::SCHEDULER.add_task(&(second_task as fn()->()));
     task = scheduler::SCHEDULER.take_task().unwrap();
     task();
-    task = scheduler::SCHEDULER.take_task().unwrap();
-    task();
+    //task = scheduler::SCHEDULER.take_task().unwrap();
+    //task();
     loop {
 
     }

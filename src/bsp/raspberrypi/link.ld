@@ -4,7 +4,7 @@
  */
 
 /* The address at which the the kernel binary will be loaded by the Raspberry's firmware */
-__rpi_load_addr = 0x80000;
+__rpi_load_addr = 0x00000;
 
 ENTRY(__rpi_load_addr)
 
@@ -18,11 +18,7 @@ SECTIONS
 {
     /* Set the link address to 32 MiB */
     . = 0x2000000;
-                                        /*   ^             */
-                                        /*   | stack       */
-                                        /*   | growth      */
-                                        /*   | direction   */
-   __boot_core_stack_end_exclusive = .; /*   |             */
+    
 
     /***********************************************************************************************
     * Code + RO Data + Global Offset Table
@@ -58,4 +54,12 @@ SECTIONS
         . += 8; /* Fill for the bss == 0 case, so that __bss_start <= __bss_end_inclusive holds */
         __bss_end_inclusive = . - 8;
     } :NONE
+
+
+    . = 0x8000000;
+                                        /*   ^             */
+                                        /*   | stack       */
+                                        /*   | growth      */
+                                        /*   | direction   */
+   __boot_core_stack_end_exclusive = .; /*   |             */
 }
