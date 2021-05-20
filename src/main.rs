@@ -12,6 +12,7 @@
 #![allow(clippy::upper_case_acronyms)]
 #![feature(const_fn_fn_ptr_basics)]
 mod bsp;
+mod exception;
 mod console;
 mod cpu;
 mod print;
@@ -52,15 +53,15 @@ unsafe fn kernel_init() -> ! {
 }
 
 fn first_task() {
-    println!("XD");
+    println!("ZADANIE 1 START I KONIEC");
 }
 
 fn second_task() {
     use core::time::Duration;
     use time::interface::TimeManager;
-    println!("XD2");
+    println!("ZADANIE 2 START");
     time::time_manager().spin_for(Duration::from_secs(1));
-    println!("XD2KONIEC");
+    println!("ZADANIE 2 KONIEC");
 }
 /// The main function running after the early init.
 unsafe fn kernel_main() -> ! {
@@ -82,6 +83,10 @@ unsafe fn kernel_main() -> ! {
         env!("CARGO_PKG_VERSION")
     );
     println!("Booting on: {}", bsp::board_name());
+    let (_, privilege_level) = exception::current_privilege_level();
+    println!("Current privilege level: {}", privilege_level);
+    exception::asynchronous::print_state();
+    
     println!("FREQUENCY: {}", CNTFRQ_EL0.get());
     println!(
         "Architectural timer resolution: {} ns",

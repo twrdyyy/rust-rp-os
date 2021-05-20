@@ -28,7 +28,7 @@
 	movk	\register, #:abs_g1_nc:\symbol
 	movk	\register, #:abs_g0_nc:\symbol
 .endm
-
+.equ _EL2, 0x8
 .equ _core_id_mask, 0b11
 
 //--------------------------------------------------------------------------------------------------
@@ -40,6 +40,9 @@
 // fn _start()
 //------------------------------------------------------------------------------
 _start:
+	mrs	x0, CurrentEL
+	cmp	x0, _EL2
+ 	b.ne	1f
 	// Only proceed on the boot core. Park it otherwise.
 	mrs	x1, MPIDR_EL1
 	and	x1, x1, _core_id_mask
