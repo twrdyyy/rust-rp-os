@@ -29,6 +29,7 @@ SECTIONS
         KEEP(*(.text._start))
         *(.text._start_arguments) /* Constants (or statics in Rust speak) read by _start(). */
         *(.text._start_rust)      /* The Rust entry point */
+        *(.text._start_rust2)      /* The Rust entry point */
         *(.text*)                 /* Everything else */
     } :segment_rx
 
@@ -62,4 +63,34 @@ SECTIONS
                                         /*   | growth      */
                                         /*   | direction   */
    __boot_core_stack_end_exclusive = .; /*   |             */
+
+
+
+
+   . = 0x5000000;
+                                        /*   ^             */
+                                        /*   | stack       */
+                                        /*   | growth      */
+                                        /*   | direction   */
+   __boot_core2_stack_end_exclusive = .; /*   |             */
+
+   . = 0x6000000;
+                                        /*   ^             */
+                                        /*   | stack       */
+                                        /*   | growth      */
+                                        /*   | direction   */
+   __boot_core3_stack_end_exclusive = .; /*   |             */
+
+   . = 0x7000000;
+                                        /*   ^             */
+                                        /*   | stack       */
+                                        /*   | growth      */
+                                        /*   | direction   */
+   __boot_core4_stack_end_exclusive = .; /*   |             */
+
+
+
+
+
+  
 }

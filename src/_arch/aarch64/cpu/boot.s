@@ -40,39 +40,67 @@
 // fn _start()
 //------------------------------------------------------------------------------
 _start:
-	mrs	x0, CurrentEL
-	cmp	x0, _EL2
- 	b.ne	1f
-	// Only proceed on the boot core. Park it otherwise.
+//	mrs	x0, CurrentEL
+//	cmp	x0, _EL2
+// 	b.ne	1f
+	
 	mrs	x1, MPIDR_EL1
 	and	x1, x1, _core_id_mask
-	ldr	x2, BOOT_CORE_ID      // provided by bsp/__board_name__/cpu.rs
+	ldr	x2, BOOT_CORE_ID     
 	cmp	x1, x2
-	b.ne	2f
+	b.eq	1f
 
-	// If execution reaches here, it is the boot core.
-
-	// Next, relocate the binary.
-	ADR_REL	x0, __binary_nonzero_start         // The address the binary got loaded to.
-	ADR_ABS	x1, __binary_nonzero_start         // The address the binary was linked to.
-	ADR_ABS	x2, __binary_nonzero_end_exclusive
-
-1:	ldr	x3, [x0], #8
-	str	x3, [x1], #8
+	mrs	x1, MPIDR_EL1
+	and	x1, x1, _core_id_mask
+	ldr	x2, CORE2_ID     
 	cmp	x1, x2
-	b.lo	1b
+	b.eq	2f
+
+	mrs	x1, MPIDR_EL1
+	and	x1, x1, _core_id_mask
+	ldr	x2, CORE3_ID     
+	cmp	x1, x2
+	b.eq	3f
+
+	mrs	x1, MPIDR_EL1
+	and	x1, x1, _core_id_mask
+	ldr	x2, CORE4_ID     
+	cmp	x1, x2
+	b.eq	4f
+
+1:
 
 	// Set the stack pointer.
-	ADR_ABS	x0, __boot_core_stack_end_exclusive
+	ADR_REL	x0, __boot_core_stack_end_exclusive
 	mov	sp, x0
 
 	// Jump to the relocated Rust code.
-	ADR_ABS	x1, _start_rust
+	b _start_rust
+
+// Infinitely wait for events (aka "park the core").
+2:	wfe
+	ADR_REL	x0, __boot_core2_stack_end_exclusive
+	mov	sp, x0
+
+	// Jump to the relocated Rust code.
+	ADR_ABS	x1, _start_rust2
 	br	x1
 
-	// Infinitely wait for events (aka "park the core").
-2:	wfe
-	b	2b
+3:	wfe
+	ADR_REL	x0, __boot_core3_stack_end_exclusive
+	mov	sp, x0
+
+	// Jump to the relocated Rust code.
+	ADR_ABS	x1, _start_rust2
+	br	x1
+
+4:	wfe
+	ADR_REL	x0, __boot_core4_stack_end_exclusive
+	mov	sp, x0
+
+	// Jump to the relocated Rust code.
+	ADR_ABS	x1, _start_rust2
+	br	x1
 
 .size	_start, . - _start
 .type	_start, function

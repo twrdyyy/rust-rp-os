@@ -35,3 +35,9 @@ pub unsafe fn _start_rust(phys_boot_core_stack_end_exclusive_addr: u64) -> ! {
     prepare_el2_to_el1_transition(phys_boot_core_stack_end_exclusive_addr);
     asm::eret()
 }
+
+
+#[no_mangle]
+pub unsafe fn _start_rust2() -> ! {
+    runtime_init::runtime_init2();
+}

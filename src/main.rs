@@ -52,6 +52,15 @@ unsafe fn kernel_init() -> ! {
     kernel_main()
 }
 
+
+unsafe fn kernel_init2() -> ! {
+    println!("HELLO FROM THE SECOND THREAD");
+    loop{}
+}
+
+
+
+
 fn first_task() {
     println!("ZADANIE 1 START I KONIEC");
 }
@@ -86,7 +95,7 @@ unsafe fn kernel_main() -> ! {
     let (_, privilege_level) = exception::current_privilege_level();
     println!("Current privilege level: {}", privilege_level);
     exception::asynchronous::print_state();
-    
+
     println!("FREQUENCY: {}", CNTFRQ_EL0.get());
     println!(
         "Architectural timer resolution: {} ns",
@@ -102,10 +111,6 @@ unsafe fn kernel_main() -> ! {
         println!("      {}. {}", i + 1, driver.compatible());
     }
 
-
-    //core::ptr::write_volatile(0xE0 as *mut fn()->(), first_task as fn()->());
-
-
     // Test a failing timer case.
     time::time_manager().spin_for(Duration::from_nanos(1));
 
@@ -117,8 +122,9 @@ unsafe fn kernel_main() -> ! {
     scheduler::SCHEDULER.add_task(&(second_task as fn()->()));
     task = scheduler::SCHEDULER.take_task().unwrap();
     task();
-    //task = scheduler::SCHEDULER.take_task().unwrap();
-    //task();
+    use cortex_a::asm;
+    asm::sev();
+
     loop {
 
     }
