@@ -67,6 +67,7 @@ unsafe fn kernel_main() -> ! {
     use core::time::Duration;
     use driver::interface::DriverManager;
     use time::interface::TimeManager;
+    use cortex_a::{regs::*};
     //use bsp::console::console;
     //use console::interface::All;
     println!("{}", OS_LOGO);
@@ -81,7 +82,7 @@ unsafe fn kernel_main() -> ! {
         env!("CARGO_PKG_VERSION")
     );
     println!("Booting on: {}", bsp::board_name());
-
+    println!("FREQUENCY: {}", CNTFRQ_EL0.get());
     println!(
         "Architectural timer resolution: {} ns",
         time::time_manager().resolution().as_nanos()
