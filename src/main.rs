@@ -90,7 +90,7 @@ fn write_str(_str: &str) {
 
 fn first_task() {
     use quicksort::quicksort as quicksort;
-    println!("ZADANIE 1 - SORTOWANIE");
+    println!("TASK 1 - SORTING");
     let mut x: [i32; 6] = [1, 3, 1, 0, 1, 2];
     println!("PRZED:");
     for i in 0..5{
@@ -101,15 +101,15 @@ fn first_task() {
     for i in 0..5{
         print!("{} ", x[i]);
     }
-    println!("\nKONIEC ZADANIA 1");
+    println!("\nEND OF TASK 1");
 }
 
 fn second_task() {
     use core::time::Duration;
     use time::interface::TimeManager;
-    println!("ZADANIE 2 - CZEKANIE PRZEZ 1 s");
+    println!("TASK 2 - WAITING");
     time::time_manager().spin_for(Duration::from_secs(1));
-    println!("KONIEC ZADANIA 2");
+    println!("END OF TASK 2");
 }
 
 fn interpreter()
@@ -130,30 +130,41 @@ fn interpreter()
             let numbers_string = read_line(&mut buffer);
             let split_numbers = numbers_string.split(" ");
             let mut numbers_array = [9999; 100];
-            let mut how_many_chars = 0;
+            let mut how_many_numbers = 0;
             for (i, number_string) in split_numbers.enumerate()
             {
                 let _number = number_string.parse::<i32>().unwrap();
                 numbers_array[i]=_number;
-                how_many_chars = i;
+                how_many_numbers = i;
             } 
-            println!("PRZED:");
-            for i in 0..how_many_chars{
+            println!("BEFORE:");
+            for i in 0..(how_many_numbers+1){
                 print!("{} ", numbers_array[i]);
             }
             
             quicksort(&mut numbers_array);
             
-            println!("\nPO:");
-            for i in 0..how_many_chars{
+            println!("\nAFTER:");
+            for i in 0..(how_many_numbers+1){
                 print!("{} ", numbers_array[i]);
             }
-
-
+        }
+        else if command=="wait"
+        {
+            println!("How long do you want to wait? [ms]");
+            let how_long_to_wait_string = read_line(&mut buffer);
+            let how_long_to_wait = how_long_to_wait_string.parse::<u64>().unwrap();
+            use core::time::Duration;
+            use time::interface::TimeManager;
+            debug!("Starting waiting");
+            time::time_manager().spin_for(Duration::from_micros(how_long_to_wait));
+            debug!("Finished waiting");
+            
         }
         else
         {
             println!("Unknown command {}", command);
+            
         }
         
     }
