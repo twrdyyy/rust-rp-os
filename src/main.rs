@@ -92,11 +92,11 @@ fn first_task() {
     use quicksort::quicksort as quicksort;
     println!("TASK 1 - SORTING");
     let mut x: [i32; 6] = [1, 3, 1, 0, 1, 2];
-    println!("PRZED:");
+    println!("BEFORE:");
     for i in 0..5{
-        print!("{}", x[i]);
+        print!("{} ", x[i]);
     }
-    println!("\nPO:");
+    println!("\nAFTER:");
     quicksort(&mut x);
     for i in 0..5{
         print!("{} ", x[i]);
@@ -118,6 +118,7 @@ fn interpreter()
     let mut buffer: [u8; 100]=[0; 100];
     loop
     {
+        println!("Type a command: sort/wait/quit");
         command = read_line(&mut buffer);
         if command=="quit"
         {
@@ -151,7 +152,7 @@ fn interpreter()
         }
         else if command=="wait"
         {
-            println!("How long do you want to wait? [ms]");
+            println!("How long do you want to wait? [us]");
             let how_long_to_wait_string = read_line(&mut buffer);
             let how_long_to_wait = how_long_to_wait_string.parse::<u64>().unwrap();
             use core::time::Duration;
@@ -164,10 +165,9 @@ fn interpreter()
         else
         {
             println!("Unknown command {}", command);
-            
         }
-        
     }
+    println!("You have quited interpreter");
 }
 
 
@@ -223,7 +223,7 @@ unsafe fn kernel_main() -> ! {
 
     // Discard any spurious received characters before going into echo mode.
     console().clear_rx();
-    write_str("siemka");
+    write_str("Starting interpreter:\n");
     
     interpreter();
     loop {

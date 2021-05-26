@@ -129,8 +129,7 @@ impl GPIOInner {
         self.registers.GPPUDCLK0.set(0);
     }
 
-    /// Map PL011 UART as standard output.
-    ///
+    /// Mapping PL011 UART to the std:output.
     /// TX to pin 14
     /// RX to pin 15
     pub fn map_pl011_uart(&mut self) {

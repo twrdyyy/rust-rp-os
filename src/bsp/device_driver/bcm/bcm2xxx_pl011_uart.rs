@@ -111,8 +111,6 @@ enum BlockingMode {
 
 pub struct PL011UartInner {
     registers: Registers,
-    chars_written: usize,
-    chars_read: usize,
 }
 
 pub use PL011UartInner as PanicUart;
@@ -124,9 +122,7 @@ pub struct PL011Uart {
 impl PL011UartInner {
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
-            registers: Registers::new(mmio_start_addr),
-            chars_written: 0,
-            chars_read: 0,
+            registers: Registers::new(mmio_start_addr)
         }
     }
 
@@ -158,8 +154,6 @@ impl PL011UartInner {
 
         // Write the character to the buffer.
         self.registers.DR.set(c as u32);
-
-        self.chars_written += 1;
     }
 
     fn flush(&self) {
@@ -181,8 +175,6 @@ impl PL011UartInner {
         }
 
         let ret = self.registers.DR.get() as u8 as char;
-
-        self.chars_read += 1;
 
         Some(ret)
     }
@@ -255,15 +247,5 @@ impl console::interface::Read for PL011Uart {
             .lock(|inner|inner.read_char(BlockingMode::NonBlocking))
             .is_some()
         {}
-    }
-}
-
-impl console::interface::Statistics for PL011Uart {
-    fn chars_written(&self) -> usize {
-        self.inner.lock(|inner| inner.chars_written)
-    }
-
-    fn chars_read(&self) -> usize {
-        self.inner.lock(|inner| inner.chars_read)
     }
 }
