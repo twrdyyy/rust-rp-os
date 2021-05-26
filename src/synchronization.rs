@@ -7,7 +7,7 @@ where T: ?Sized,
 {
     data: UnsafeCell<T>,
 }
-//constructor
+/// Null Lock constructor
 impl<T> NullLock<T> {
     
     pub const fn new(data: T) -> Self {
@@ -19,12 +19,9 @@ impl<T> NullLock<T> {
 unsafe impl<T> Send for NullLock<T> where T: ?Sized + Send {}
 unsafe impl<T> Sync for NullLock<T> where T: ?Sized + Sync {}
 
-
-
-
-
+/// Interface used in synchronization
 pub mod interface {
-    //object implementing Mutex trait will be granted an exclusive access to data
+    /// Object implementing Mutex trait will be granted an exclusive access to data
     pub trait Mutex {
         
         type Data;
@@ -32,8 +29,6 @@ pub mod interface {
         fn lock<R>(&self, f: impl FnOnce(&mut Self::Data) -> R) -> R;
     }
 }
-
-
 
 impl<T> interface::Mutex for NullLock<T> {
     type Data = T;
