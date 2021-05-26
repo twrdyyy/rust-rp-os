@@ -33,7 +33,7 @@ macro_rules! debug {
         
 
         $crate::print::_print(format_args_nl!(
-            concat!($string, "TIME: {:>3}s {:03} ms"),
+            concat!($string, " [TIME: {:>3}s {:03} ms]"),
             time_manager().uptime().as_secs(),
             time_manager().uptime().subsec_micros()/1000,
         ));

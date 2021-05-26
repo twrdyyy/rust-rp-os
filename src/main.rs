@@ -60,8 +60,9 @@ unsafe fn kernel_init2() -> ! {
 }
 
 
-/*fn read_line(&mut result: &&[u8; 100]) -> &str {
+fn read_line(result: &mut [u8; 100]) -> &str {
     use core::str::from_utf8;
+    use console::interface::All;
     let mut c: char;
     
     let mut how_many_chars: usize=0;
@@ -77,22 +78,30 @@ unsafe fn kernel_init2() -> ! {
     }
 
     return from_utf8(&result[0..how_many_chars]).unwrap();
-} */
+} 
 
+fn write_str(_str: &str) {
+    use console::interface::All;
+    for c in _str.chars()
+    {
+        bsp::console::console().write_char(c);
+    }
+}
 
 fn first_task() {
     use quicksort::quicksort as quicksort;
     println!("ZADANIE 1 - SORTOWANIE");
     let mut x: [i32; 6] = [1, 3, 1, 0, 1, 2];
-    println!("PRZED:\n");
+    println!("PRZED:");
     for i in 0..5{
-        println!("{} \n", x[i]);
+        print!("{}", x[i]);
     }
-    println!("PO:\n");
+    println!("\nPO:");
     quicksort(&mut x);
     for i in 0..5{
-        println!("{} ", x[i]);
+        print!("{} ", x[i]);
     }
+    println!("\nKONIEC ZADANIA 1");
 }
 
 fn second_task() {
@@ -100,8 +109,57 @@ fn second_task() {
     use time::interface::TimeManager;
     println!("ZADANIE 2 - CZEKANIE PRZEZ 1 s");
     time::time_manager().spin_for(Duration::from_secs(1));
-    println!("ZADANIE 2 KONIEC");
+    println!("KONIEC ZADANIA 2");
 }
+
+fn interpreter()
+{
+    let mut command;
+    let mut buffer: [u8; 100]=[0; 100];
+    loop
+    {
+        command = read_line(&mut buffer);
+        if command=="quit"
+        {
+            break;
+        }
+        else if command=="sort"
+        {
+            use quicksort::quicksort as quicksort;
+            println!("Pass numbers you want to sort: ");
+            let numbers_string = read_line(&mut buffer);
+            let split_numbers = numbers_string.split(" ");
+            let mut numbers_array = [9999; 100];
+            let mut how_many_chars = 0;
+            for (i, number_string) in split_numbers.enumerate()
+            {
+                let _number = number_string.parse::<i32>().unwrap();
+                numbers_array[i]=_number;
+                how_many_chars = i;
+            } 
+            println!("PRZED:");
+            for i in 0..how_many_chars{
+                print!("{} ", numbers_array[i]);
+            }
+            
+            quicksort(&mut numbers_array);
+            
+            println!("\nPO:");
+            for i in 0..how_many_chars{
+                print!("{} ", numbers_array[i]);
+            }
+
+
+        }
+        else
+        {
+            println!("Unknown command {}", command);
+        }
+        
+    }
+}
+
+
 /// The main function running after the early init.
 unsafe fn kernel_main() -> ! {
     use core::time::Duration;
@@ -110,8 +168,6 @@ unsafe fn kernel_main() -> ! {
     use bsp::console::console;
     use console::interface::All;
     use cortex_a::{regs::*};
-    //use bsp::console::console;
-    //use console::interface::All;
     println!("{}", OS_LOGO);
     println!("{:^37}", bsp::board_name());
     println!();
@@ -152,20 +208,14 @@ unsafe fn kernel_main() -> ! {
     scheduler::SCHEDULER.add_task(&(second_task as fn()->()));
     task = scheduler::SCHEDULER.take_task().unwrap();
     task();
-    use cortex_a::asm;
     
-    let ptr: *mut u32 = (0x40000090) as *mut _;
-    println!("{:#010x}", first_task as  u32);
-    core::ptr::write_volatile(ptr, first_task as  u32);
-    asm::sev();
-    println!("[4] Echoing input now");
 
     // Discard any spurious received characters before going into echo mode.
     console().clear_rx();
-    //let mut buffer: [u8; 100]=[0;100];
+    write_str("siemka");
+    
+    interpreter();
     loop {
-        let c = bsp::console::console().read_char();
-        bsp::console::console().write_char(c);
     }
     
     
