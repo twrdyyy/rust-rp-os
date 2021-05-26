@@ -10,3 +10,10 @@ pub unsafe fn runtime_init() -> ! {
 
     crate::kernel_init()
 }
+
+
+pub unsafe fn runtime_init2() -> ! {
+    zero_bss();
+
+    crate::kernel_init2()
+}

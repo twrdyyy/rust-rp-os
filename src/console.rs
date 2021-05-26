@@ -16,17 +16,9 @@ pub mod interface {
 
         fn clear_rx(&self);
     }
-          
-    pub trait Statistics {    
-        fn chars_written(&self) -> usize {
-                  0
-        }
-        fn chars_read(&self) -> usize {
-            0
-        }
-    }
+        
      
    /// '+' is the union of two traits :o
-   pub trait All = Read + Write + Statistics;
+   pub trait All = Read + Write;
         
 }

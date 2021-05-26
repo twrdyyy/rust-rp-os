@@ -12,6 +12,7 @@
 #![allow(clippy::upper_case_acronyms)]
 #![feature(const_fn_fn_ptr_basics)]
 mod bsp;
+mod exception;
 mod console;
 mod cpu;
 mod print;
@@ -21,6 +22,8 @@ mod memory;
 mod synchronization;
 mod driver;
 mod time;
+mod scheduler;
+mod quicksort;
 
 const OS_LOGO: &str = r#"
  _______                         __            _______   _______          ______    ______
@@ -50,52 +53,149 @@ unsafe fn kernel_init() -> ! {
     kernel_main()
 }
 
+
+unsafe fn kernel_init2() -> ! {
+    println!("HELLO FROM THE SECOND THREAD");
+    loop{}
+}
+
+
+fn read_line(result: &mut [u8; 100]) -> &str {
+    use core::str::from_utf8;
+    use console::interface::All;
+    let mut c: char;
+    
+    let mut how_many_chars: usize=0;
+    for (i, h) in result.iter_mut().enumerate()
+    {
+        how_many_chars=i;
+        c=bsp::console::console().read_char();
+        if c=='\n'
+        {
+            break;
+        }
+        *h=c as u8;
+    }
+
+    return from_utf8(&result[0..how_many_chars]).unwrap();
+} 
+
+fn write_str(_str: &str) {
+    use console::interface::All;
+    for c in _str.chars()
+    {
+        bsp::console::console().write_char(c);
+    }
+}
+
+fn first_task() {
+    use quicksort::quicksort as quicksort;
+    println!("TASK 1 - SORTING");
+    let mut x: [i32; 6] = [1, 3, 1, 0, 1, 2];
+    println!("BEFORE:");
+    for i in 0..5{
+        print!("{} ", x[i]);
+    }
+    println!("\nAFTER:");
+    quicksort(&mut x);
+    for i in 0..5{
+        print!("{} ", x[i]);
+    }
+    println!("\nEND OF TASK 1");
+}
+
+fn second_task() {
+    use core::time::Duration;
+    use time::interface::TimeManager;
+    println!("TASK 2 - WAITING");
+    time::time_manager().spin_for(Duration::from_secs(1));
+    println!("END OF TASK 2");
+}
+
+fn interpreter()
+{
+    let mut command;
+    let mut buffer: [u8; 100]=[0; 100];
+    loop
+    {
+        println!("Type a command: sort/wait/quit");
+        command = read_line(&mut buffer);
+        if command=="quit"
+        {
+            break;
+        }
+        else if command=="sort"
+        {
+            use quicksort::quicksort as quicksort;
+            println!("Pass numbers you want to sort: ");
+            let numbers_string = read_line(&mut buffer);
+            let split_numbers = numbers_string.split(" ");
+            let mut numbers_array = [9999; 100];
+            let mut how_many_numbers = 0;
+            for (i, number_string) in split_numbers.enumerate()
+            {
+                let _number = number_string.parse::<i32>().unwrap();
+                numbers_array[i]=_number;
+                how_many_numbers = i;
+            } 
+            println!("BEFORE:");
+            for i in 0..(how_many_numbers+1){
+                print!("{} ", numbers_array[i]);
+            }
+            
+            quicksort(&mut numbers_array);
+            
+            println!("\nAFTER:");
+            for i in 0..(how_many_numbers+1){
+                print!("{} ", numbers_array[i]);
+            }
+        }
+        else if command=="wait"
+        {
+            println!("How long do you want to wait? [us]");
+            let how_long_to_wait_string = read_line(&mut buffer);
+            let how_long_to_wait = how_long_to_wait_string.parse::<u64>().unwrap();
+            use core::time::Duration;
+            use time::interface::TimeManager;
+            debug!("Starting waiting");
+            time::time_manager().spin_for(Duration::from_micros(how_long_to_wait));
+            debug!("Finished waiting");
+            
+        }
+        else
+        {
+            println!("Unknown command {}", command);
+        }
+    }
+    println!("You have quited interpreter");
+}
+
+
 /// The main function running after the early init.
-fn kernel_main() -> ! {
+unsafe fn kernel_main() -> ! {
     use core::time::Duration;
     use driver::interface::DriverManager;
     use time::interface::TimeManager;
     use bsp::console::console;
     use console::interface::All;
-
+    use cortex_a::{regs::*};
     println!("{}", OS_LOGO);
     println!("{:^37}", bsp::board_name());
     println!();
-    println!("[ML] Requesting binary");
-    console().flush();
+    println!("[ML]hello");
 
-    console().clear_rx();
-
-    for _ in 0..3 {
-        console().write_char(3 as char);
-    }
-
-    let mut size: u32= u32::from(console().read_char() as u8);
-    size |= u32::from(console().read_char() as u8) << 8;
-    size |= u32::from(console().read_char() as u8) << 16;
-    size |= u32::from(console().read_char() as u8) << 24;
-
-    console().write_char('O');
-    console().write_char('K');
-
-    let kernel_addr: *mut u8 = bsp::memory::board_default_load_addr() as *mut u8;
-    unsafe {
-        for i in 0..size {
-            core::ptr::write_volatile(kernel_addr.offset(i as isize),
-                                      console().read_char() as u8)
-        }
-    }
-
-    println!("[ML] Loaded! Executig the payload now\n");
-    console().flush();
-
+    
     println!(
         "{} version {}",
         env!("CARGO_PKG_NAME"),
         env!("CARGO_PKG_VERSION")
     );
     println!("Booting on: {}", bsp::board_name());
+    let (_, privilege_level) = exception::current_privilege_level();
+    println!("Current privilege level: {}", privilege_level);
+    exception::asynchronous::print_state();
 
+    println!("FREQUENCY: {}", CNTFRQ_EL0.get());
     println!(
         "Architectural timer resolution: {} ns",
         time::time_manager().resolution().as_nanos()
@@ -109,12 +209,25 @@ fn kernel_main() -> ! {
     {
         println!("      {}. {}", i + 1, driver.compatible());
     }
-
-    // Test a failing timer case.
     time::time_manager().spin_for(Duration::from_nanos(1));
 
+    scheduler::SCHEDULER.add_task(&(first_task as fn()->()));
+    scheduler::SCHEDULER.add_task(&(second_task as fn()->()));
+
+    let mut task: fn() -> () = scheduler::SCHEDULER.take_task().unwrap();
+    task();
+    scheduler::SCHEDULER.add_task(&(second_task as fn()->()));
+    task = scheduler::SCHEDULER.take_task().unwrap();
+    task();
+    
+
+    // Discard any spurious received characters before going into echo mode.
+    console().clear_rx();
+    write_str("Starting interpreter:\n");
+    
+    interpreter();
     loop {
-        debug!("Spinning for 1 second");
-        time::time_manager().spin_for(Duration::from_secs(1));
     }
+    
+    
 }

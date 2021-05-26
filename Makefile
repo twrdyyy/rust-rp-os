@@ -59,7 +59,7 @@ KERNEL_ELF = target/$(TARGET)/release/kernel
 DOCKER_IMAGE         = rustembedded/osdev-utils
 DOCKER_CMD           = docker run --rm -v $(shell pwd):/work/tutorial -w /work/tutorial
 DOCKER_CMD_INTERACT  = $(DOCKER_CMD) -i -t
-DOCKER_ARG_DIR_UTILS = -v $(shell pwd)/../utils:/work/utils
+DOCKER_ARG_DIR_UTILS = -v $(shell pwd)utils:/work/utils
 DOCKER_ARG_DEV       = --privileged -v /dev:/dev
 
 DOCKER_QEMU  = $(DOCKER_CMD_INTERACT) $(DOCKER_IMAGE)
@@ -74,7 +74,7 @@ ifeq ($(UNAME_S),Linux)
 endif
 
 EXEC_QEMU     = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
-EXEC_MINIPUSH = ruby ../utils/minipush.rb
+EXEC_MINIPUSH = ruby utils/minipush.rb
 EXEC_QEMU_MINIPUSH = ruby tests/qemu_minipush.rb
 
 .PHONY: all $(KERNEL_ELF) $(KERNEL_BIN) doc qemu qemuasm chainboot clippy clean readelf objdump nm check

@@ -1,3 +1,8 @@
+/* SPDX-License-Identifier: MIT OR Apache-2.0
+ *
+ * Copyright (c) 2018-2021 Andre Richter <andre.o.richter@gmail.com>
+ */
+
 /* The address at which the the kernel binary will be loaded by the Raspberry's firmware */
 __rpi_load_addr = 0x80000;
 
@@ -11,19 +16,29 @@ PHDRS
 
 SECTIONS
 {
-    . =  0x2000000;
+    /* Set the link address to 32 MiB */
+    . = __rpi_load_addr;
                                         /*   ^             */
                                         /*   | stack       */
                                         /*   | growth      */
                                         /*   | direction   */
    __boot_core_stack_end_exclusive = .; /*   |             */
 
+    
+
+   
+
+
+    /***********************************************************************************************
+    * Code + RO Data + Global Offset Table
+    ***********************************************************************************************/
     __binary_nonzero_start = .;
     .text :
     {
         KEEP(*(.text._start))
         *(.text._start_arguments) /* Constants (or statics in Rust speak) read by _start(). */
         *(.text._start_rust)      /* The Rust entry point */
+        *(.text._start_rust2)      /* The Rust entry point */
         *(.text*)                 /* Everything else */
     } :segment_rx
 
@@ -35,6 +50,7 @@ SECTIONS
     ***********************************************************************************************/
     .data : { *(.data*) } :segment_rw
 
+    /* Fill up to 8 byte, b/c relocating the binary is done in u64 chunks */
     . = ALIGN(8);
     __binary_nonzero_end_exclusive = .;
 
@@ -48,4 +64,33 @@ SECTIONS
         . += 8; /* Fill for the bss == 0 case, so that __bss_start <= __bss_end_inclusive holds */
         __bss_end_inclusive = . - 8;
     } :NONE
+
+
+    . += 1000;
+                                        /*   ^             */
+                                        /*   | stack       */
+                                        /*   | growth      */
+                                        /*   | direction   */
+   __boot_core2_stack_end_exclusive = .; /*   |             */
+
+   . += 1000;
+                                        /*   ^             */
+                                        /*   | stack       */
+                                        /*   | growth      */
+                                        /*   | direction   */
+   __boot_core3_stack_end_exclusive = .; /*   |             */
+
+
+    . += 1000;
+                                        /*   ^             */
+                                        /*   | stack       */
+                                        /*   | growth      */
+                                        /*   | direction   */
+   __boot_core4_stack_end_exclusive = __boot_core_stack_end_exclusive; /*   |             */
+
+   
+
+
+
+  
 }
