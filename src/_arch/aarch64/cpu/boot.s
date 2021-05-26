@@ -40,9 +40,9 @@
 // fn _start()
 //------------------------------------------------------------------------------
 _start:
-//	mrs	x0, CurrentEL
-//	cmp	x0, _EL2
-// 	b.ne	1f
+	mrs	x0, CurrentEL
+	cmp	x0, _EL2
+ 	b.ne	1f
 	
 	mrs	x1, MPIDR_EL1
 	and	x1, x1, _core_id_mask
@@ -50,32 +50,22 @@ _start:
 	cmp	x1, x2
 	b.eq	1f
 
-	mrs	x1, MPIDR_EL1
-	and	x1, x1, _core_id_mask
-	ldr	x2, CORE2_ID     
-	cmp	x1, x2
-	b.eq	2f
-
-	mrs	x1, MPIDR_EL1
-	and	x1, x1, _core_id_mask
-	ldr	x2, CORE3_ID     
-	cmp	x1, x2
-	b.eq	3f
-
-	mrs	x1, MPIDR_EL1
-	and	x1, x1, _core_id_mask
-	ldr	x2, CORE4_ID     
-	cmp	x1, x2
-	b.eq	4f
-
 1:
 
 	// Set the stack pointer.
 	ADR_REL	x0, __boot_core_stack_end_exclusive
 	mov	sp, x0
-
-	// Jump to the relocated Rust code.
+	
+    ldr x1,=_start_rust2
+	
+    mov x2,#0x40000000
+	
+    //str x1,[x2, #0xDC]
+    sev
 	b _start_rust
+    #bx lr
+	// Jump to the relocated Rust code.
+	
 
 // Infinitely wait for events (aka "park the core").
 2:	wfe

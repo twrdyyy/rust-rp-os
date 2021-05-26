@@ -44,7 +44,7 @@ class MiniTerm
         wait_for_serial
 
         @target_serial = SerialPort.new(@target_serial_name, SERIAL_BAUD, 8, 1, SerialPort::NONE)
-
+		
         # Ensure all output is immediately flushed to the device.
         @target_serial.sync = true
     rescue Errno::EACCES => e
@@ -76,11 +76,13 @@ class MiniTerm
         # Transmit host console input to target.
         loop do
             c = @host_console.getc()
-
+			puts "odebrano"
+			puts(c)
             # CTRL + C in raw mode was pressed.
-           
-
-            @target_serial.putc(c)
+			@target_serial.flush()
+            @target_serial.write_noblock(c)
+			@target_serial.flush()
+			puts "wyslano"
         end
     end
 

@@ -4,7 +4,7 @@
  */
 
 /* The address at which the the kernel binary will be loaded by the Raspberry's firmware */
-__rpi_load_addr = 0x00000;
+__rpi_load_addr = 0x80000;
 
 ENTRY(__rpi_load_addr)
 
@@ -17,8 +17,17 @@ PHDRS
 SECTIONS
 {
     /* Set the link address to 32 MiB */
-    . = 0x2000000;
+    . = __rpi_load_addr;
+                                        /*   ^             */
+                                        /*   | stack       */
+                                        /*   | growth      */
+                                        /*   | direction   */
+   __boot_core_stack_end_exclusive = .; /*   |             */
+
     
+
+   
+
 
     /***********************************************************************************************
     * Code + RO Data + Global Offset Table
@@ -57,38 +66,29 @@ SECTIONS
     } :NONE
 
 
-    . = 0x8000000;
-                                        /*   ^             */
-                                        /*   | stack       */
-                                        /*   | growth      */
-                                        /*   | direction   */
-   __boot_core_stack_end_exclusive = .; /*   |             */
-
-
-
-
-   . = 0x5000000;
+    . += 1000;
                                         /*   ^             */
                                         /*   | stack       */
                                         /*   | growth      */
                                         /*   | direction   */
    __boot_core2_stack_end_exclusive = .; /*   |             */
 
-   . = 0x6000000;
+   . += 1000;
                                         /*   ^             */
                                         /*   | stack       */
                                         /*   | growth      */
                                         /*   | direction   */
    __boot_core3_stack_end_exclusive = .; /*   |             */
 
-   . = 0x7000000;
+
+    . += 1000;
                                         /*   ^             */
                                         /*   | stack       */
                                         /*   | growth      */
                                         /*   | direction   */
-   __boot_core4_stack_end_exclusive = .; /*   |             */
+   __boot_core4_stack_end_exclusive = __boot_core_stack_end_exclusive; /*   |             */
 
-
+   
 
 
 
