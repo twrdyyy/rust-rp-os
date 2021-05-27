@@ -10,6 +10,7 @@ static GPIO:
 static PL011_UART: 
     device_driver::PL011Uart = unsafe { device_driver::PL011Uart::new(memory::map::mmio::PL011_UART_START) };
 
+/// Get current board name
 pub fn board_name() -> &'static str {
     #[cfg(feature = "bsp_rpi3")]
     {

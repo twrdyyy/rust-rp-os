@@ -1,6 +1,7 @@
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png")]
 
 //! # Kernel library written in rust language
+//! How awesome is Rust? Even now I do not know
 
 #![feature(format_args_nl)]
 #![feature(global_asm)]
@@ -11,6 +12,9 @@
 #![no_std]
 #![allow(clippy::upper_case_acronyms)]
 #![feature(const_fn_fn_ptr_basics)]
+
+use scheduler::SCHEDULER;
+
 mod bsp;
 mod exception;
 mod console;
@@ -37,7 +41,7 @@ $$ |  $$ |$$    $$/ /     $$/   $$  $$/       $$ |  $$ |$$ |            $$    $$
 $$/   $$/  $$$$$$/  $$$$$$$/     $$$$/        $$/   $$/ $$/              $$$$$$/   $$$$$$/
 "#;
 
-
+/// Kernel initialization function
 unsafe fn kernel_init() -> ! {
     use driver::interface::DriverManager;
 
@@ -53,13 +57,13 @@ unsafe fn kernel_init() -> ! {
     kernel_main()
 }
 
-
-unsafe fn kernel_init2() -> ! {
+/// Other Kernel initialization
+unsafe fn other_kernel_init() -> ! {
     println!("HELLO FROM THE SECOND THREAD");
     loop{}
 }
 
-
+/// Read line from console
 fn read_line(result: &mut [u8; 100]) -> &str {
     use core::str::from_utf8;
     use console::interface::All;
@@ -80,6 +84,7 @@ fn read_line(result: &mut [u8; 100]) -> &str {
     return from_utf8(&result[0..how_many_chars]).unwrap();
 } 
 
+/// Write string to console
 fn write_str(_str: &str) {
     use console::interface::All;
     for c in _str.chars()
@@ -88,6 +93,8 @@ fn write_str(_str: &str) {
     }
 }
 
+/// First task for scheduler demo
+/// It sorts an array. :)
 fn first_task() {
     use quicksort::quicksort as quicksort;
     println!("TASK 1 - SORTING");
@@ -104,6 +111,8 @@ fn first_task() {
     println!("\nEND OF TASK 1");
 }
 
+/// Second task for scheduler demo
+/// This task just waits
 fn second_task() {
     use core::time::Duration;
     use time::interface::TimeManager;
@@ -112,6 +121,14 @@ fn second_task() {
     println!("END OF TASK 2");
 }
 
+/// Interpreter main loop
+///
+/// Possible commands:
+/// - sort -> sorts given array
+/// - memory -> reveals first 100 registers of rust code in raspberry memory
+/// - bss -> reveals bss memory
+/// - wait -> waits for given amount of time
+/// - quit -> quits interpreter
 fn interpreter()
 {
     let mut command;
@@ -137,20 +154,20 @@ fn interpreter()
                 let _number = number_string.parse::<i32>().unwrap();
                 numbers_array[i]=_number;
                 how_many_numbers = i;
-            } 
+            }
             println!("BEFORE:");
             for i in 0..(how_many_numbers+1){
                 print!("{} ", numbers_array[i]);
             }
-            
+
             quicksort(&mut numbers_array);
-            
+
             println!("\nAFTER:");
             for i in 0..(how_many_numbers+1){
                 print!("{} ", numbers_array[i]);
             }
         }
-        else if command=="wait"
+        else if command == "wait"
         {
             println!("How long do you want to wait? [us]");
             let how_long_to_wait_string = read_line(&mut buffer);
@@ -160,7 +177,22 @@ fn interpreter()
             debug!("Starting waiting");
             time::time_manager().spin_for(Duration::from_micros(how_long_to_wait));
             debug!("Finished waiting");
-            
+        }
+        else if command == "bss"
+        {
+            println!("Reading bss memory...");
+            unsafe {
+                memory::read_range(bsp::memory::bss_range_inclusive(), 100);
+            }
+        }
+        else if command == "memory"
+        {
+            println!("Reading memory...");
+            println!("Rust code data (only first 100):");
+            unsafe {
+                memory::read_range(bsp::memory::rust_range_inclusive(), 100);
+            }
+            println!("Do you see core ids? :)");
         }
         else
         {
@@ -181,10 +213,9 @@ unsafe fn kernel_main() -> ! {
     use cortex_a::{regs::*};
     println!("{}", OS_LOGO);
     println!("{:^37}", bsp::board_name());
+    println!("Assert BSS is reset");
+    memory::read_range(bsp::memory::bss_range_inclusive(), 100);
     println!();
-    println!("[ML]hello");
-
-    
     println!(
         "{} version {}",
         env!("CARGO_PKG_NAME"),
@@ -211,23 +242,22 @@ unsafe fn kernel_main() -> ! {
     }
     time::time_manager().spin_for(Duration::from_nanos(1));
 
-    scheduler::SCHEDULER.add_task(&(first_task as fn()->()));
-    scheduler::SCHEDULER.add_task(&(second_task as fn()->()));
+    SCHEDULER.add_task(&(first_task as fn()->()));
+    SCHEDULER.add_task(&(second_task as fn()->()));
 
-    let mut task: fn() -> () = scheduler::SCHEDULER.take_task().unwrap();
+    let mut task: fn() -> () = SCHEDULER.take_task().unwrap();
     task();
-    scheduler::SCHEDULER.add_task(&(second_task as fn()->()));
-    task = scheduler::SCHEDULER.take_task().unwrap();
+    SCHEDULER.add_task(&(second_task as fn()->()));
+    task = SCHEDULER.take_task().unwrap();
     task();
-    
 
     // Discard any spurious received characters before going into echo mode.
     console().clear_rx();
     write_str("Starting interpreter:\n");
     
     interpreter();
+
     loop {
     }
-    
-    
+
 }

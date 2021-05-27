@@ -24,11 +24,6 @@ SECTIONS
                                         /*   | direction   */
    __boot_core_stack_end_exclusive = .; /*   |             */
 
-    
-
-   
-
-
     /***********************************************************************************************
     * Code + RO Data + Global Offset Table
     ***********************************************************************************************/
@@ -88,9 +83,4 @@ SECTIONS
                                         /*   | direction   */
    __boot_core4_stack_end_exclusive = __boot_core_stack_end_exclusive; /*   |             */
 
-   
-
-
-
-  
 }
